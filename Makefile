@@ -3,10 +3,14 @@ usage:
 	@echo "target:"
 	@for app in $(apps); do echo "  $$app"; done | sort
 
+# Default install destination
+dest ?= ~/App/
 
-dest := ~/App/
+# Install destination prefix
+prefix ?= /opt
+
+# Apps that can be downloaded/installed in this Makefile
 apps :=
-
 
 # JDK
 apps += jdk
@@ -43,6 +47,12 @@ maven: $(maven_package)
 $(maven_package):
 	wget -c https://dlcdn.apache.org/maven/maven-3/$(maven_version)/binaries/$@
 
+# Maven-package
+apps += maven-rpm
+maven_arch := noarch
+maven_rpm: apache-maven-$(maven_version).$(maven_arch).rpm
+$(maven_rpm): $(maven_package)
+	fpm -s tar -t rpm -n apache-maven -a $(maven_arch) --prefix $(prefix) $<
 
 # Warbler
 apps += warbler
@@ -73,12 +83,21 @@ $(graalvm_package):
 	wget -c -O $@ https://download.oracle.com/graalvm/17/latest/$@
 
 
+# Graalvm-package
+apps += graalvm-rpm
+graalvm_arch := x86_64
+graalvm_rpm := apache-graalvm-$(graalvm_version).$(graalvm_arch).rpm
+graalvm-rpm: $(graalvm_rpm)
+$(graalvm_rpm): $(graalvm_package)
+	fpm -s tar -t rpm -n graalvm-jdk -a $(graalvm_arch) --prefix $(prefix) $<
+
 # leininage
 apps += leiningen
-leiningen: lein
-lein:
-	wget -c -O $@ https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
-	chmod +x $@
+leiningen: lein.zip
+lein.zip:
+	wget -c https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
+	chmod +x lein
+	zip --move --test $@ lein
 
 
 # TruffleRuby

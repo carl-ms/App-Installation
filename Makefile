@@ -3,11 +3,8 @@ usage:
 	@echo "target:"
 	@for app in $(apps); do echo "  $$app"; done | sort
 
-# Default install destination
-dest ?= ~/App/
-
 # Install destination prefix
-prefix ?= /opt
+prefix ?= ~/app/
 
 # Apps that can be downloaded/installed in this Makefile
 apps :=
@@ -109,11 +106,11 @@ $(truffleruby_package):
 	wget -c -O $@ https://github.com/oracle/truffleruby/releases/download/graal-$(truffleruby_version)/$(truffleruby_package)
 
 apps += truffleruby-install
-truffleruby_dir := $(dest)$(patsubst %.tar.gz,%,$(truffleruby_package))/
+truffleruby_dir := $(prefix)$(patsubst %.tar.gz,%,$(truffleruby_package))/
 truffleruby_bin := $(truffleruby_dir)bin/truffleruby
 truffleruby_ref := https://www.graalvm.org/latest/reference-manual/ruby/RubyManagers/#using-truffleruby-without-a-ruby-manager
 $(truffleruby_bin): $(truffleruby_package)
-	tar -xzmf $(truffleruby_package) -C $(dest)
+	tar -xzmf $(truffleruby_package) -C $(prefix)
 
 truffleruby_deps := $(truffleruby_dir)src/main/c/openssl/openssl.so $(truffleruby_dir)src/main/c/psych/psych.so
 $(truffleruby_deps):
@@ -146,7 +143,7 @@ $(babashka_package):
 
 apps += babashka-install
 ifeq ($(wildcard ~/bin/.),)
-babashka_bindir := $(dest)babashka-$(babashka_version)/bin
+babashka_bindir := $(prefix)babashka-$(babashka_version)/bin
 else
 babashka_bindir := ~/bin
 endif

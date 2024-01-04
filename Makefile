@@ -48,8 +48,8 @@ $(maven_package):
 apps += maven-rpm
 maven_arch := noarch
 maven_rpm: apache-maven-$(maven_version).$(maven_arch).rpm
-$(maven_rpm): $(maven_package)
-	fpm -s tar -t rpm -n apache-maven -a $(maven_arch) --prefix $(prefix) $<
+$(maven_rpm): $(maven_package) $(fpm)
+	$(fpm) -s tar -t rpm -n apache-maven -a $(maven_arch) --prefix $(prefix) $<
 
 # Warbler
 apps += warbler
@@ -85,8 +85,8 @@ apps += graalvm-rpm
 graalvm_arch := x86_64
 graalvm_rpm := apache-graalvm-$(graalvm_version).$(graalvm_arch).rpm
 graalvm-rpm: $(graalvm_rpm)
-$(graalvm_rpm): $(graalvm_package)
-	fpm -s tar -t rpm -n graalvm-jdk -a $(graalvm_arch) --prefix $(prefix) $<
+$(graalvm_rpm): $(graalvm_package) $(fpm)
+	$(fpm) -s tar -t rpm -n graalvm-jdk -a $(graalvm_arch) --prefix $(prefix) $<
 
 # leininage
 apps += leiningen
@@ -122,6 +122,12 @@ $(truffleruby_deps):
 
 truffleruby-install: $(truffleruby_bin) $(truffleruby_deps)
 
+# fpm for unpacking rpm files
+apps += fpm-install
+fpm := $(truffleruby_dir)/bin/fpm
+fpm-install : $(fpm)
+$(fpm): $(truffleruby_bin)
+	$(truffleruby_bin) -S gem install fpm
 
 # Bitwarden Cli
 apps += bitwarden

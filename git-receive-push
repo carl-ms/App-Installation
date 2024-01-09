@@ -18,9 +18,25 @@ cat <<\EOF > hooks/post-update
 #!/usr/bin/sh
 unset GIT_DIR
 
+if ! [ -e HEAD ]; then
+    echo "Error: file HEAD not found in $(pwd), not a .git folder?"
+    exit 1
+fi
+
+br=$1
+switch_br=:
+restore='git restore -W -S .'
+
+if ! grep -q -F "$br" HEAD; then
+    switch_br="git checkout ${br##*/}"
+fi
+
 # change directory to top-level (current: .git)
 cd .. || exit 1
-exec git restore -W -S .
+
+$switch_br
+$restore
+
 EOF
 
 chmod +x hooks/post-update

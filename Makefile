@@ -23,7 +23,7 @@ apps += jruby
 jruby_version := 9.4.4.0
 jruby_package := jruby-dist-$(jruby_version)-bin.tar.gz
 jruby: $(jruby_package)
-$(jruby_package): 
+$(jruby_package):
 	wget -c https://repo1.maven.org/maven2/org/jruby/jruby-dist/$(jruby_version)/$@
 
 

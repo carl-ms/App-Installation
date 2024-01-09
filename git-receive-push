@@ -2,8 +2,12 @@
 # enable local repository to allow receiving push,
 # and update local checkout when push received.
 
-if [ -z "$GIT_DIR" ]; then
-	GIT_DIR=${1:-$(pwd)}/.git
+if [ -z "$1" ]; then
+    if [ -z "$GIT_DIR" ]; then
+	GIT_DIR=$(pwd)/.git
+    fi
+else
+    GIT_DIR="$1"/.git
 fi
 
 cd "$GIT_DIR" || { echo "Cannot change directory to $GIT_DIR" >&2; exit 1; }
@@ -40,6 +44,7 @@ $restore
 EOF
 
 chmod +x hooks/post-update
+cd "$GIT_DIR"/..
 
 # allow push to current checked out branch
 echo "* enable push to current branch"

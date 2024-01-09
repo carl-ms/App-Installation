@@ -1,0 +1,34 @@
+#!/bin/sh
+# enable local repository to allow receiving push,
+# and update local checkout when push received.
+
+if [ -z "$GIT_DIR" ]; then
+	GIT_DIR=${1:-$(pwd)}/.git
+fi
+
+cd "$GIT_DIR" || { echo "Cannot change directory to $GIT_DIR" >&2; exit 1; }
+if ! [ -d "hooks" ]; then
+    echo "Error: no ${GIT_DIR}/hooks folder found, not a git repository?" >&2
+    exit 1
+fi
+
+# create hook for checkout after receiving any updates
+echo "* creating git hook post-update"
+cat <<\EOF > hooks/post-update
+#!/usr/bin/sh
+unset GIT_DIR
+
+# change directory to top-level (current: .git)
+cd .. || exit 1
+exec git restore -W -S .
+EOF
+
+chmod +x hooks/post-update
+
+# allow push to current checked out branch
+echo "* enable push to current branch"
+git config receive.denyCurrentBranch ignore
+
+# remove all remotes
+echo "* remove all remotes"
+git remote | xargs -r -n1 git remote remove -v

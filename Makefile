@@ -9,6 +9,9 @@ prefix ?= ~/app/
 # Apps that can be downloaded/installed in this Makefile
 apps :=
 
+# Check required rpms installation before installation.
+pre_install_require = /usr/bin/lsb_release
+
 # JDK
 apps += jdk
 jdk_version := 17
@@ -114,13 +117,19 @@ $(truffleruby_bin): $(truffleruby_package)
 
 truffleruby_deps := $(truffleruby_dir)src/main/c/openssl/openssl.so $(truffleruby_dir)src/main/c/psych/psych.so
 $(truffleruby_deps):
-	set -e; for p in openssl-devel libyaml-devel zlib-devel gcc; do \
-	    rpm -q $$p &>/dev/null || sudo dnf install -y -q --enablerepo=codeready-builder\* $$p; done;
+	distrib=$$(lsb_release -i | cut -f2); \
+	case "$$distrib" in \
+	    RedHatEnterpriseServer) repo='codeready-rebuilder*';; \
+	    CentOSStream) repo=powertools;; \
+	    *) repo='*';; \
+	esac; \
+	set -ex; for p in openssl-devel libyaml-devel zlib-devel gcc; do \
+	    rpm -q $$p &>/dev/null || sudo dnf -y install --enablerepo="$$repo" $$p; done;
 	cd $(truffleruby_dir) && lib/truffle/post_install_hook.sh
 	@test -z "$${GEM_HOME}" || echo -e "** Please unset environment variable \e[31mGEM_HOME\e[0m, see $(truffleruby_ref)"
 	@test -z "$${GEM_PATH}" || echo -e "** Please unset environment variable \e[31mGEM_PATH\e[0m, see $(truffleruby_ref)"
 
-truffleruby-install: $(truffleruby_bin) $(truffleruby_deps)
+truffleruby-install: $(pre_install_require) $(truffleruby_bin) $(truffleruby_deps)
 
 # fpm for unpacking rpm files
 apps += fpm-install
@@ -158,6 +167,8 @@ babashka-install:
 	tar xaf $(babashka_package) -C $(babashka_bindir)
 
 
+/usr/bin/lsb_release:
+	sudo dnf -y install redhat-lsb-core
 
 # All
 all: $(apps)

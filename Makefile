@@ -1,7 +1,7 @@
 usage:
 	@echo "usage: make [target...]"
 	@echo "target:"
-	@for app in $(apps); do echo "  $$app"; done | sort
+	@for app in $(apps); do echo "  $$app"; done | LC_ALL=C sort
 
 # Install destination prefix
 prefix ?= ~/app/
@@ -150,7 +150,7 @@ bw.zip:
 # Babashka
 apps += babashka
 babashka_version := 1.3.186
-babashka_package :=babashka-$(babashka_version)-linux-amd64-static.tar.gz
+babashka_package := babashka-$(babashka_version)-linux-amd64-static.tar.gz
 
 babashka: $(babashka_package)
 $(babashka_package):
@@ -166,6 +166,63 @@ babashka-install:
 	mkdir -p $(babashka_bindir)
 	tar xaf $(babashka_package) -C $(babashka_bindir)
 
+# JASSPA MicroEmacs
+apps += jasspa_2009
+jasspa_version := 20091011
+jasspa_package := jasspa-mesrc-$(jasspa_version).tar.gz
+
+jasspa_2009: $(jasspa_package)
+$(jasspa_package):
+	wget -c -O $@.swp http://www.jasspa.com/release_20090909/$(jasspa_package)
+	mv -f $@.swp $@
+
+apps += jasspa_2009-install
+ifeq ($(wildcard ~/bin/.),)
+jasspa_bindir := $(prefix)jasspa-$(babashka_version)/bin
+else
+jasspa_bindir := ~/bin
+endif
+jasspa_2009-install: $(jasspa_bindir)/mec2009
+$(jasspa_bindir)/mec2009: builddir := $(shell mktemp -d --suffix=.jasspa)
+$(jasspa_bindir)/mec2009: $(jasspa_package)
+	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=2
+	cd $(builddir)/src && sed -i -e 's/sys_errlist\[errno]/strerror(errno)/g' *.c
+	cd $(builddir)/src && ./build && cp -f mec $@
+	rm -rf $(builddir)
+
+# JASSPA MicroEmacs from github
+apps += jasspa
+jasspa_version := 09.12.21
+jasspa_package := jasspa-mesrc-$(jasspa_version).tar.gz
+
+jasspa: $(jasspa_package)
+$(jasspa_package):
+	wget -c -O $@.swp https://github.com/mittelmark/microemacs/archive/refs/tags/v$(jasspa_version).tar.gz
+	mv -f $@.swp $@
+
+apps += jasspa-install
+ifeq ($(wildcard ~/bin/.),)
+jasspa_bindir := $(prefix)jasspa-$(babashka_version)/bin
+else
+jasspa_bindir := ~/bin
+endif
+
+ifneq ($(MSYSTEM),)
+exe=.exe
+endif
+
+jasspa-install: $(jasspa_bindir)/mec$(exe)
+$(jasspa_bindir)/mec$(exe): builddir := $(shell mktemp -d --suffix=.jasspa)
+$(jasspa_bindir)/mec$(exe): $(jasspa_package)
+	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=1
+	patch -d $(builddir) -p0 < jasspa.patch
+	cd $(builddir) && rm -f bin/me*
+	cd $(builddir)/src && ./build
+	cd $(builddir) && make me-bfs-bin
+	[ -f $(builddir)/bin/mec-linux.bin ] &&  cp $(builddir)/bin/mec-linux.bin $@ ||:
+	[ -f $(builddir)/bin/mec-windows.exe ] && cp $(builddir)/bin/mec-windows.exe $@ ||:
+	test -f $@
+	rm -rf $(builddir)
 
 /usr/bin/lsb_release:
 	sudo dnf -y install redhat-lsb-core

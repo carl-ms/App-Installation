@@ -216,12 +216,13 @@ $(jasspa_bindir)/mec$(exe): builddir := $(shell mktemp -d --suffix=.jasspa)
 $(jasspa_bindir)/mec$(exe): $(jasspa_package)
 	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=1
 	patch -d $(builddir) -p0 < jasspa.patch
-	cd $(builddir) && rm -f bin/me*
+	cd $(builddir) && rm -f bin/me* bin/bfs*
 	cd $(builddir)/src && ./build
 	cd $(builddir) && make me-bfs-bin
 	[ -f $(builddir)/bin/mec-linux.bin ] &&  cp $(builddir)/bin/mec-linux.bin $@ ||:
 	[ -f $(builddir)/bin/mec-windows.exe ] && cp $(builddir)/bin/mec-windows.exe $@ ||:
 	test -f $@
+	-cp -f $(builddir)/bin/bfs* $(@D)
 	rm -rf $(builddir)
 
 /usr/bin/lsb_release:

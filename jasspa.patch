@@ -296,3 +296,41 @@
  mingw-w32-compile:
  	cd src && make -f win32mingw.mak CC=i686-w64-mingw32-gcc RC=i686-w64-mingw32-windres
  	cd src && make -f win32mingw.mak CC=i686-w64-mingw32-gcc RC=i686-w64-mingw32-windres BTYP=c
+--- src/eskeys.def	2023-10-29 20:09:49.000000000 +0000
++++ src/eskeys.def.new	2024-01-30 06:01:48.063420838 +0000
+@@ -29,7 +29,7 @@
+  */
+ 
+ DEFSKEY ("",             NULL, NULL,      SKEY_error ) /* Don't want a key with value 0x00 */
+-DEFSKEY ("backspace",    "kb", "\010",    SKEY_backspace )
++DEFSKEY ("backspace",    "kb", "\177",    SKEY_backspace )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("bell",         NULL, NULL,      SKEY_bell )
+ #endif
+@@ -40,7 +40,7 @@
+ DEFSKEY ("cancel",       NULL, NULL,      SKEY_cancel )
+ DEFSKEY ("caps-lock",    NULL, NULL,      SKEY_caps_lock )
+ DEFSKEY ("clear",        NULL, NULL,      SKEY_clear )
+-DEFSKEY ("delete",       "kD", "\177",    SKEY_delete )
++DEFSKEY ("delete",       "kD", "\033[3~", SKEY_delete )
+ DEFSKEY ("down",         "kd", "\033[B",  SKEY_down )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("drop",         NULL, NULL,      SKEY_drop )
+@@ -62,7 +62,7 @@
+ DEFSKEY ("f9",           "k9", "\033[20~",SKEY_f9 )
+ DEFSKEY ("find",         NULL, NULL,      SKEY_find )
+ DEFSKEY ("help",         NULL, NULL,      SKEY_help )
+-DEFSKEY ("home",         "kh", "\033[3~", SKEY_home )
++DEFSKEY ("home",         "kh", "\033[1~", SKEY_home )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("idle-drop",    NULL, NULL,      SKEY_idle_drop )
+ DEFSKEY ("idle-pick",    NULL, NULL,      SKEY_idle_pick )
+@@ -117,7 +117,7 @@
+ #if MEOPT_CALLBACK
+ DEFSKEY ("pick",         NULL, NULL,      SKEY_pick )
+ #endif
+-DEFSKEY ("print",        NULL, NULL,      SKEY_print ) 
++DEFSKEY ("print",        NULL, NULL,      SKEY_print )
+ DEFSKEY ("redo",         NULL, NULL,      SKEY_redo )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("redraw",       NULL, NULL,      SKEY_redraw )

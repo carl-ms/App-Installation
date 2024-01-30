@@ -228,5 +228,12 @@ $(jasspa_bindir)/mec$(exe): $(jasspa_package)
 /usr/bin/lsb_release:
 	sudo dnf -y install redhat-lsb-core
 
+apps += phcl-microemacs
+phcl-microemacs_pkg := $(patsubst %,phcl-microemacs/%, MicroEmacs-4.21-0.0.src.rpm MicroEmacs-4.21-0.0.x86_64.rpm)
+phcl-microemacs: $(phcl-microemacs_pkg)
+$(phcl-microemacs_pkg):
+	mkdir -p $(@D)
+	rsync -Pt rsync://www.phcomp.co.uk/downloads/centos9-x86_64/phcl/$(@F) $(@D)/
+
 # All
 all: $(apps)

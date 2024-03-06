@@ -12,10 +12,21 @@ apps :=
 # Check required rpms installation before installation.
 pre_install_require = /usr/bin/lsb_release
 
+# Operating system
+uname_os := $(shell uname -o)
+
+ifeq ($(uname_os), GNU/Linux)
+os := linux
+else ifeq ($(uname_os), Msys)
+os := windows
+else
+os := $(uname_os)
+endif
+
 # JDK
 apps += jdk
 jdk_version := 17
-jdk_package := jdk-$(jdk_version)_linux-x64_bin.tar.gz
+jdk_package := jdk-$(jdk_version)_$(os)-x64_bin.tar.gz
 jdk: $(jdk_package)
 $(jdk_package):
 	wget -c https://download.oracle.com/java/$(jdk_version)/latest/$@
@@ -149,8 +160,12 @@ bw.zip:
 
 # Babashka
 apps += babashka
-babashka_version := 1.3.186
-babashka_package := babashka-$(babashka_version)-linux-amd64-static.tar.gz
+babashka_version := 1.3.188
+ifeq ($(os), linux)
+babashka_package := babashka-$(babashka_version)-$(os)-amd64-static.tar.gz
+else ifeq ($(os), windows)
+babashka_package := babashka-$(babashka_version)-$(os)-amd64.zip
+endif
 
 babashka: $(babashka_package)
 $(babashka_package):
@@ -162,9 +177,9 @@ babashka_bindir := $(prefix)babashka-$(babashka_version)/bin
 else
 babashka_bindir := ~/bin
 endif
-babashka-install:
+babashka-install: $(babashka_package)
 	mkdir -p $(babashka_bindir)
-	tar xaf $(babashka_package) -C $(babashka_bindir)
+	[[ $^ == *.zip ]] && unzip $^ -d $(babashka_bindir) || tar xaf $(babashka_package) -C $(babashka_bindir)
 
 # JASSPA MicroEmacs
 apps += jasspa_2009

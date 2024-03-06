@@ -198,7 +198,7 @@ else
 jasspa_bindir := ~/bin
 endif
 jasspa_2009-install: $(jasspa_bindir)/mec2009
-$(jasspa_bindir)/mec2009: builddir := $(shell mktemp -d --suffix=.jasspa)
+$(jasspa_bindir)/mec2009: builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXX)
 $(jasspa_bindir)/mec2009: $(jasspa_package)
 	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=2
 	cd $(builddir)/src && sed -i -e 's/sys_errlist\[errno]/strerror(errno)/g' *.c
@@ -227,15 +227,15 @@ exe=.exe
 endif
 
 jasspa-install: $(jasspa_bindir)/mec$(exe)
-$(jasspa_bindir)/mec$(exe): builddir := $(shell mktemp -d --suffix=.jasspa)
+$(jasspa_bindir)/mec$(exe): builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXXX)
 $(jasspa_bindir)/mec$(exe): $(jasspa_package)
 	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=1
-	patch -d $(builddir) -p0 < jasspa.patch
+	patch -d $(builddir) -p1 < jasspa.patch
 	cd $(builddir) && rm -f bin/me* bin/bfs*
 	cd $(builddir)/src && ./build
 	cd $(builddir) && make me-bfs-bin
-	[ -f $(builddir)/bin/mec-linux.bin ] &&  cp $(builddir)/bin/mec-linux.bin $@ ||:
-	[ -f $(builddir)/bin/mec-windows.exe ] && cp $(builddir)/bin/mec-windows.exe $@ ||:
+	[ -f $(builddir)/bin/mec-linux.bin ] &&  install -D -m 755 $(builddir)/bin/mec-linux.bin $@ ||:
+	[ -f $(builddir)/bin/mec-windows.exe ] && install -D $(builddir)/bin/mec-windows.exe $@ ||:
 	test -f $@
 	-cp -f $(builddir)/bin/bfs* $(@D)
 	rm -rf $(builddir)

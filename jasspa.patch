@@ -1,5 +1,52 @@
---- src/build	2024-01-24 22:43:15.215575400 +0800
-+++ src/build.new	2024-01-24 22:53:37.236153000 +0800
+diff -uNr microemacs-09.12.21/Makefile microemacs-09.12.21.new/Makefile
+--- microemacs-09.12.21/Makefile	2023-10-30 04:09:49.000000000 +0800
++++ microemacs-09.12.21.new/Makefile	2024-01-31 21:12:11.091145800 +0800
+@@ -2,14 +2,15 @@
+ default:
+ 	echo "Makefile for Linux systems"
+ 	echo "Usage make bfs-bin|me-bin|me-standalone"
+-bfs-bin:
++bfs-bin: bin/bfs
++bin/bfs:
+ 	cd bfs && make
+ 	cp bfs/bfs bin/
+ me-bin:
+ 	cd src && make -f linux32gcc.gmk
+-	cp src/.linux32gcc-release-mecw/mecw bin/
++	find src -type f -perm 755 -name 'me*' -exec cp -vf {} bin/ \;
+ 
+-me-bfs-bin:
++me-bfs-bin: bfs-bin
+ 	-rm -rf me-bfs/*
+ 	-mkdir me-bfs
+ 	-mkdir me-bfs/jasspa
+@@ -17,14 +18,16 @@
+ 	cp -r jasspa/macros me-bfs/jasspa/
+ 	rm -f me-bfs/jasspa/macros/*~
+ 	-rm me-bfs/jasspa/macros/null
+-	#cp -r jasspa/contrib me-bfs/jasspa/
++	cp -r jasspa/contrib me-bfs/jasspa/
+ 	cp jasspa/spelling/*$(dict)*f me-bfs/jasspa/spelling/
+-	cd me-bfs && ../bin/bfs -a ../src/.linux32gcc-release-mecw/mecw -o ../me-linux.bin ./jasspa
+-	cd me-bfs && ../bin/bfs -a ../src/.win32mingw-release-mew/mew32.exe -o ../me-windows.exe ./jasspa
+-	cd me-bfs && ../bin/bfs -a ../src/.win32mingw-release-mec/mec32.exe -o ../mec-windows.exe ./jasspa
+-	cd me-bfs && ../bin/bfs -c macros-`date +%Y-%m-%d`.bfs ./jasspa
+-	cp me-bfs/macros-`date +%Y-%m-%d`.bfs .
+-	#rm -rf me-bfs/*
++	find src -maxdepth 1 -type f -perm 755 -name 'me*' -exec cp -vf {} bin/ \;
++	[ -f bin/mecw.exe] && (cd me-bfs && ../bin/bfs -a ../bin/mecw.exe -o ../bin/mecw-windows.exe ./jasspa) ||:
++	[ -f bin/mew32.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mew32.exe -o ../bin/me32-windows.exe ./jasspa) ||:
++	[ -f bin/mec32.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mec32.exe -o ../bin/mec32-windows.exe ./jasspa) ||:
++	[ -f bin/mec.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mec.exe -o ../bin/mec-windows.exe ./jasspa) ||:
++	[ -f bin/mec -a ! -f bin/mec.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mec -o ../bin/mec-linux.bin ./jasspa) ||:
++	[ -f bin/me*-windows.exe ] || [ -f bin/me*-linux.bin ]
++
+ mingw-w32-compile:
+ 	cd src && make -f win32mingw.mak CC=i686-w64-mingw32-gcc RC=i686-w64-mingw32-windres
+ 	cd src && make -f win32mingw.mak CC=i686-w64-mingw32-gcc RC=i686-w64-mingw32-windres BTYP=c
+diff -uNr microemacs-09.12.21/src/build microemacs-09.12.21.new/src/build
+--- microemacs-09.12.21/src/build	2023-10-30 04:09:49.000000000 +0800
++++ microemacs-09.12.21.new/src/build	2024-01-31 21:12:11.037142700 +0800
 @@ -97,10 +97,14 @@
          else
              MAKEBAS=aix4
@@ -16,9 +63,48 @@
      elif [ $PLATFORM = "Darwin" ] ; then
          MAKEBAS=darwin
          X11_MAKEINC=/usr/X11R6/include
-
---- src/msys2.gmk	2024-01-24 22:24:47.000000000 +0800
-+++ src/msys2.gmk.new	2024-01-24 22:20:03.800991100 +0800
+diff -uNr microemacs-09.12.21/src/eskeys.def microemacs-09.12.21.new/src/eskeys.def
+--- microemacs-09.12.21/src/eskeys.def	2023-10-30 04:09:49.000000000 +0800
++++ microemacs-09.12.21.new/src/eskeys.def	2024-01-31 21:30:11.187923800 +0800
+@@ -29,7 +29,7 @@
+  */
+ 
+ DEFSKEY ("",             NULL, NULL,      SKEY_error ) /* Don't want a key with value 0x00 */
+-DEFSKEY ("backspace",    "kb", "\010",    SKEY_backspace )
++DEFSKEY ("backspace",    "kb", "\177",    SKEY_backspace )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("bell",         NULL, NULL,      SKEY_bell )
+ #endif
+@@ -40,7 +40,7 @@
+ DEFSKEY ("cancel",       NULL, NULL,      SKEY_cancel )
+ DEFSKEY ("caps-lock",    NULL, NULL,      SKEY_caps_lock )
+ DEFSKEY ("clear",        NULL, NULL,      SKEY_clear )
+-DEFSKEY ("delete",       "kD", "\177",    SKEY_delete )
++DEFSKEY ("delete",       "kD", "\033[3~", SKEY_delete )
+ DEFSKEY ("down",         "kd", "\033[B",  SKEY_down )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("drop",         NULL, NULL,      SKEY_drop )
+@@ -62,7 +62,7 @@
+ DEFSKEY ("f9",           "k9", "\033[20~",SKEY_f9 )
+ DEFSKEY ("find",         NULL, NULL,      SKEY_find )
+ DEFSKEY ("help",         NULL, NULL,      SKEY_help )
+-DEFSKEY ("home",         "kh", "\033[3~", SKEY_home )
++DEFSKEY ("home",         "kh", "\033[1~", SKEY_home )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("idle-drop",    NULL, NULL,      SKEY_idle_drop )
+ DEFSKEY ("idle-pick",    NULL, NULL,      SKEY_idle_pick )
+@@ -117,7 +117,7 @@
+ #if MEOPT_CALLBACK
+ DEFSKEY ("pick",         NULL, NULL,      SKEY_pick )
+ #endif
+-DEFSKEY ("print",        NULL, NULL,      SKEY_print ) 
++DEFSKEY ("print",        NULL, NULL,      SKEY_print )
+ DEFSKEY ("redo",         NULL, NULL,      SKEY_redo )
+ #if MEOPT_CALLBACK
+ DEFSKEY ("redraw",       NULL, NULL,      SKEY_redraw )
+diff -uNr microemacs-09.12.21/src/msys2.gmk microemacs-09.12.21.new/src/msys2.gmk
+--- microemacs-09.12.21/src/msys2.gmk	1970-01-01 08:00:00.000000000 +0800
++++ microemacs-09.12.21.new/src/msys2.gmk	2024-01-31 21:12:11.068144500 +0800
 @@ -0,0 +1,231 @@
 +# -!- makefile -!-
 +#
@@ -251,86 +337,14 @@
 +$(OBJ_DN): $(HEADERS)
 +$(OBJ_DV): $(HEADERS)
 +$(OBJ_DE): $(HEADERS)
---- Makefile	2023-10-29 20:09:49.000000000 +0000
-+++ Makefile.new	2024-01-26 06:26:59.561291000 +0000
-@@ -2,14 +2,15 @@
- default:
- 	echo "Makefile for Linux systems"
- 	echo "Usage make bfs-bin|me-bin|me-standalone"
--bfs-bin:
-+bfs-bin: bin/bfs
-+bin/bfs:
- 	cd bfs && make
- 	cp bfs/bfs bin/
- me-bin:
- 	cd src && make -f linux32gcc.gmk
--	cp src/.linux32gcc-release-mecw/mecw bin/
-+	find src -type f -perm 755 -name 'me*' -exec cp -vf {} bin/ \;
- 
--me-bfs-bin:
-+me-bfs-bin: bfs-bin
- 	-rm -rf me-bfs/*
- 	-mkdir me-bfs
- 	-mkdir me-bfs/jasspa
-@@ -17,14 +18,16 @@
- 	cp -r jasspa/macros me-bfs/jasspa/
- 	rm -f me-bfs/jasspa/macros/*~
- 	-rm me-bfs/jasspa/macros/null
--	#cp -r jasspa/contrib me-bfs/jasspa/
-+	cp -r jasspa/contrib me-bfs/jasspa/
- 	cp jasspa/spelling/*$(dict)*f me-bfs/jasspa/spelling/
--	cd me-bfs && ../bin/bfs -a ../src/.linux32gcc-release-mecw/mecw -o ../me-linux.bin ./jasspa
--	cd me-bfs && ../bin/bfs -a ../src/.win32mingw-release-mew/mew32.exe -o ../me-windows.exe ./jasspa
--	cd me-bfs && ../bin/bfs -a ../src/.win32mingw-release-mec/mec32.exe -o ../mec-windows.exe ./jasspa
--	cd me-bfs && ../bin/bfs -c macros-`date +%Y-%m-%d`.bfs ./jasspa
--	cp me-bfs/macros-`date +%Y-%m-%d`.bfs .
--	#rm -rf me-bfs/*
-+	find src -maxdepth 1 -type f -perm 755 -name 'me*' -exec cp -vf {} bin/ \;
-+	[ -f bin/mecw.exe] && (cd me-bfs && ../bin/bfs -a ../bin/mecw.exe -o ../bin/mecw-windows.exe ./jasspa) ||:
-+	[ -f bin/mew32.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mew32.exe -o ../bin/me32-windows.exe ./jasspa) ||:
-+	[ -f bin/mec32.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mec32.exe -o ../bin/mec32-windows.exe ./jasspa) ||:
-+	[ -f bin/mec.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mec.exe -o ../bin/mec-windows.exe ./jasspa) ||:
-+	[ -f bin/mec -a ! -f bin/mec.exe ] && (cd me-bfs && ../bin/bfs -a ../bin/mec -o ../bin/mec-linux.bin ./jasspa) ||:
-+	[ -f bin/me*-windows.exe ] || [ -f bin/me*-linux.bin ]
-+
- mingw-w32-compile:
- 	cd src && make -f win32mingw.mak CC=i686-w64-mingw32-gcc RC=i686-w64-mingw32-windres
- 	cd src && make -f win32mingw.mak CC=i686-w64-mingw32-gcc RC=i686-w64-mingw32-windres BTYP=c
---- src/eskeys.def	2023-10-29 20:09:49.000000000 +0000
-+++ src/eskeys.def.new	2024-01-30 06:01:48.063420838 +0000
-@@ -29,7 +29,7 @@
-  */
- 
- DEFSKEY ("",             NULL, NULL,      SKEY_error ) /* Don't want a key with value 0x00 */
--DEFSKEY ("backspace",    "kb", "\010",    SKEY_backspace )
-+DEFSKEY ("backspace",    "kb", "\177",    SKEY_backspace )
- #if MEOPT_CALLBACK
- DEFSKEY ("bell",         NULL, NULL,      SKEY_bell )
- #endif
-@@ -40,7 +40,7 @@
- DEFSKEY ("cancel",       NULL, NULL,      SKEY_cancel )
- DEFSKEY ("caps-lock",    NULL, NULL,      SKEY_caps_lock )
- DEFSKEY ("clear",        NULL, NULL,      SKEY_clear )
--DEFSKEY ("delete",       "kD", "\177",    SKEY_delete )
-+DEFSKEY ("delete",       "kD", "\033[3~", SKEY_delete )
- DEFSKEY ("down",         "kd", "\033[B",  SKEY_down )
- #if MEOPT_CALLBACK
- DEFSKEY ("drop",         NULL, NULL,      SKEY_drop )
-@@ -62,7 +62,7 @@
- DEFSKEY ("f9",           "k9", "\033[20~",SKEY_f9 )
- DEFSKEY ("find",         NULL, NULL,      SKEY_find )
- DEFSKEY ("help",         NULL, NULL,      SKEY_help )
--DEFSKEY ("home",         "kh", "\033[3~", SKEY_home )
-+DEFSKEY ("home",         "kh", "\033[1~", SKEY_home )
- #if MEOPT_CALLBACK
- DEFSKEY ("idle-drop",    NULL, NULL,      SKEY_idle_drop )
- DEFSKEY ("idle-pick",    NULL, NULL,      SKEY_idle_pick )
-@@ -117,7 +117,7 @@
- #if MEOPT_CALLBACK
- DEFSKEY ("pick",         NULL, NULL,      SKEY_pick )
- #endif
--DEFSKEY ("print",        NULL, NULL,      SKEY_print ) 
-+DEFSKEY ("print",        NULL, NULL,      SKEY_print )
- DEFSKEY ("redo",         NULL, NULL,      SKEY_redo )
- #if MEOPT_CALLBACK
- DEFSKEY ("redraw",       NULL, NULL,      SKEY_redraw )
+diff -uNr microemacs-09.12.21.orig/jasspa/macros/hkruby.emf microemacs-09.12.21/jasspa/macros/hkruby.emf
+--- microemacs-09.12.21.orig/jasspa/macros/hkruby.emf   2023-10-30 04:09:49.000000000 +0800
++++ microemacs-09.12.21/jasspa/macros/hkruby.emf        2024-03-06 22:07:45.316845900 +0800
+@@ -101,6 +101,7 @@
+     hilight .hilight.ruby    1 "print"      .scheme.keyword
+     hilight .hilight.ruby    1 "puts"       .scheme.keyword
+     hilight .hilight.ruby    0x20 "require" .scheme.prepro
++    hilight .hilight.ruby    0x20 "require_relative" .scheme.prepro
+     ; Built-in Variables
+     hilight .hilight.ruby    1 "true"       .scheme.prepro
+     hilight .hilight.ruby    1 "false"      .scheme.prepro

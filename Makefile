@@ -9,19 +9,27 @@ prefix ?= ~/app/
 # Apps that can be downloaded/installed in this Makefile
 apps :=
 
-# Check required rpms installation before installation.
-pre_install_require = /usr/bin/lsb_release
-
 # Operating system
 uname_os := $(shell uname -o)
 
 ifeq ($(uname_os), GNU/Linux)
 os := linux
+req_progs := /usr/bin/lsb_release
 else ifeq ($(uname_os), Msys)
 os := windows
 else
 os := $(uname_os)
 endif
+
+# Check required rpms installation before installation.
+/usr/bin/lsb_release:
+	sudo dnf -y install redhat-lsb-core
+
+# Prepare before installation
+pre_install: $(req_progs)
+	mkdir -p $(prefix)
+	mkdir -p ~/bin
+
 
 # JDK
 apps += jdk
@@ -43,7 +51,7 @@ $(jruby_package):
 
 # JRuby installation
 apps += jruby-install
-jruby-install: $(prefix)/jruby-$(jruby_version)/lib/jruby.jar
+jruby-install: pre_install $(prefix)/jruby-$(jruby_version)/lib/jruby.jar
 $(prefix)/jruby-$(jruby_version)/lib/jruby.jar: $(jruby_package)
 	tar -xamf $< -C $(prefix)
 
@@ -58,9 +66,8 @@ $(jruby_complete_package):
 
 # JRuby_Complete installation
 apps += jruby_complete-install
-jruby_complete-install: ~/bin/$(jruby_complete_package)
+jruby_complete-install: pre_install ~/bin/$(jruby_complete_package)
 ~/bin/$(jruby_complete_package): $(jruby_complete_package)
-	mkdir -p $(@D)
 	cp -f $< $@
 
 # Maven
@@ -153,12 +160,12 @@ $(truffleruby_deps):
 	@test -z "$${GEM_HOME}" || echo -e "** Please unset environment variable \e[31mGEM_HOME\e[0m, see $(truffleruby_ref)"
 	@test -z "$${GEM_PATH}" || echo -e "** Please unset environment variable \e[31mGEM_PATH\e[0m, see $(truffleruby_ref)"
 
-truffleruby-install: $(pre_install_require) $(truffleruby_bin) $(truffleruby_deps)
+truffleruby-install: pre_install $(truffleruby_bin) $(truffleruby_deps)
 
 # fpm for unpacking rpm files
 apps += fpm-install
 fpm := $(truffleruby_dir)/bin/fpm
-fpm-install : $(fpm)
+fpm-install: $(fpm)
 $(fpm): $(truffleruby_bin)
 	$(truffleruby_bin) -S gem install fpm
 
@@ -190,7 +197,7 @@ babashka_bindir := $(prefix)babashka-$(babashka_version)/bin
 else
 babashka_bindir := ~/bin
 endif
-babashka-install: $(babashka_package)
+babashka-install: pre_install $(babashka_package)
 	mkdir -p $(babashka_bindir)
 	[[ $^ == *.zip ]] && unzip $^ -d $(babashka_bindir) || tar xaf $(babashka_package) -C $(babashka_bindir)
 
@@ -210,7 +217,7 @@ jasspa_bindir := $(prefix)jasspa-$(babashka_version)/bin
 else
 jasspa_bindir := ~/bin
 endif
-jasspa_2009-install: $(jasspa_bindir)/mec2009
+jasspa_2009-install: pre_install $(jasspa_bindir)/mec2009
 $(jasspa_bindir)/mec2009: builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXX)
 $(jasspa_bindir)/mec2009: $(jasspa_package)
 	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=2
@@ -239,7 +246,7 @@ ifneq ($(MSYSTEM),)
 exe=.exe
 endif
 
-jasspa-install: $(jasspa_bindir)/mec$(exe)
+jasspa-install: pre_install $(jasspa_bindir)/mec$(exe)
 $(jasspa_bindir)/mec$(exe): builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXXX)
 $(jasspa_bindir)/mec$(exe): $(jasspa_package)
 	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=1
@@ -253,9 +260,6 @@ $(jasspa_bindir)/mec$(exe): $(jasspa_package)
 	-cp -f $(builddir)/bin/bfs* $(@D)
 	rm -rf $(builddir)
 
-/usr/bin/lsb_release:
-	sudo dnf -y install redhat-lsb-core
-
 apps += phcl-microemacs
 phcl-microemacs_pkg := $(patsubst %,phcl-microemacs/%, MicroEmacs-4.21-0.0.src.rpm MicroEmacs-4.21-0.0.x86_64.rpm)
 phcl-microemacs: $(phcl-microemacs_pkg)
@@ -265,3 +269,5 @@ $(phcl-microemacs_pkg):
 
 # All
 all: $(apps)
+
+.PHONY: pre_install $(apps)

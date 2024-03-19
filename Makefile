@@ -34,12 +34,18 @@ $(jdk_package):
 
 # JRuby
 apps += jruby
-jruby_version := 9.4.4.0
+jruby_version := 9.4.6.0
 jruby_package := jruby-dist-$(jruby_version)-bin.tar.gz
 jruby: $(jruby_package)
 $(jruby_package):
 	wget -c https://repo1.maven.org/maven2/org/jruby/jruby-dist/$(jruby_version)/$@
 
+
+# JRuby installation
+apps += jruby-install
+jruby-install: $(prefix)/jruby-$(jruby_version)/lib/jruby.jar
+$(prefix)/jruby-$(jruby_version)/lib/jruby.jar: $(jruby_package)
+	tar -xamf $< -C $(prefix)
 
 # JRuby-Complete
 apps += jruby_complete
@@ -49,6 +55,13 @@ jruby_complete: $(jruby_complete_package)
 $(jruby_complete_package):
 	wget -c https://repo1.maven.org/maven2/org/jruby/jruby-complete/$(jruby_complete_version)/$@
 
+
+# JRuby_Complete installation
+apps += jruby_complete-install
+jruby_complete-install: ~/bin/$(jruby_complete_package)
+~/bin/$(jruby_complete_package): $(jruby_complete_package)
+	mkdir -p $(@D)
+	cp -f $< $@
 
 # Maven
 apps += maven

@@ -21,15 +21,17 @@ else
 os := $(uname_os)
 endif
 
+# Prepare before installation
+pre_install: .pre_install.done $(req_progs)
+
+.pre_install.done:
+	mkdir -p $(prefix)
+	mkdir -p ~/bin
+	@touch $@
+
 # Check required rpms installation before installation.
 /usr/bin/lsb_release:
 	sudo dnf -y install redhat-lsb-core
-
-# Prepare before installation
-pre_install: $(req_progs)
-	mkdir -p $(prefix)
-	mkdir -p ~/bin
-
 
 # JDK
 apps += jdk
@@ -94,15 +96,43 @@ warbler: $(warbler_package)
 $(warbler_package):
 	wget -c -O $@ https://github.com/jruby/warbler/archive/refs/tags/v$(warbler_version).tar.gz
 
+# TinyGo
+apps += tinygo
+tinygo_version := 0.31.2
+ifeq ($(MSYSTEM),MSYS)
+tinygo_package := tinygo$(tinygo_version).windows-amd64.zip
+else
+tinygo_package := tinygo(golang_version).linux-amd64.tar.gz
+endif
+
+tinygo: $(tinygo_package)
+$(tinygo_package):
+	wget -c -O $@ https://github.com/tinygo-org/tinygo/releases/download/v$(tinygo_version)/$@
+
+# TinyGo-install
+apps += tinygo-install
+tinygo-install: pre_install $(prefix)/tinygo/VERSION
+$(prefix)/tinygo/VERSION: $(tinygo_package)
+	mkdir -p $(prefix)
+	case "$<" in *.zip) unzip -DD -d $(prefix) $<;; *.tar.*) tar -xamf $< -C $(prefix);; esac
 
 # Golang
 apps += golang
-golang_version := 1.21.3
+golang_version := 1.22.1
+ifeq ($(MSYSTEM),MSYS)
+golang_package := go$(golang_version).windows-amd64.zip
+else
 golang_package := go$(golang_version).linux-amd64.tar.gz
+endif
 golang: $(golang_package)
 $(golang_package):
 	wget -c -O $@ https://go.dev/dl/$@
 
+apps += golang-install
+golang-install: pre_install $(prefix)/go/VERSION
+$(prefix)/go/VERSION: $(golang_package)
+	mkdir -p $(prefix)
+	case "$<" in *.zip) unzip -DD -d $(prefix) $<;; *.tar.*) tar -xamf $< -C $(prefix);; esac
 
 # Graalvm
 apps += graalvm

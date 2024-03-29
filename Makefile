@@ -4,7 +4,7 @@ usage:
 	@for app in $(apps); do echo "  $$app"; done | LC_ALL=C sort
 
 # Install destination prefix
-prefix ?= ~/app/
+DESTDIR ?= ~/app
 
 # Apps that can be downloaded/installed in this Makefile
 apps :=
@@ -25,7 +25,7 @@ endif
 pre_install: .pre_install.done $(req_progs)
 
 .pre_install.done:
-	mkdir -p $(prefix)
+	mkdir -p $(DESTDIR)
 	mkdir -p ~/bin
 	@touch $@
 
@@ -53,9 +53,9 @@ $(jruby_package):
 
 # JRuby installation
 apps += jruby-install
-jruby-install: pre_install $(prefix)/jruby-$(jruby_version)/lib/jruby.jar
-$(prefix)/jruby-$(jruby_version)/lib/jruby.jar: $(jruby_package)
-	tar -xamf $< -C $(prefix)
+jruby-install: pre_install $(DESTDIR)/jruby-$(jruby_version)/lib/jruby.jar
+$(DESTDIR)/jruby-$(jruby_version)/lib/jruby.jar: $(jruby_package)
+	tar -xamf $< -C $(DESTDIR)
 
 # JRuby-Complete
 apps += jruby_complete
@@ -85,7 +85,7 @@ apps += maven-rpm
 maven_arch := noarch
 maven_rpm: apache-maven-$(maven_version).$(maven_arch).rpm
 $(maven_rpm): $(maven_package) $(fpm)
-	$(fpm) -s tar -t rpm -n apache-maven -a $(maven_arch) --prefix $(prefix) $<
+	$(fpm) -s tar -t rpm -n apache-maven -a $(maven_arch) --prefix $(DESTDIR) $<
 
 # Warbler
 apps += warbler
@@ -111,10 +111,10 @@ $(tinygo_package):
 
 # TinyGo-install
 apps += tinygo-install
-tinygo-install: pre_install $(prefix)/tinygo/VERSION
-$(prefix)/tinygo/VERSION: $(tinygo_package)
-	mkdir -p $(prefix)
-	case "$<" in *.zip) unzip -DD -d $(prefix) $<;; *.tar.*) tar -xamf $< -C $(prefix);; esac
+tinygo-install: pre_install $(DESTDIR)/tinygo/lib/musl/COPYRIGHT
+$(DESTDIR)/tinygo/lib/musl/COPYRIGHT: $(tinygo_package)
+	mkdir -p $(DESTDIR)
+	case "$<" in *.zip) unzip -DD -n -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR) --skip-old-files;; esac
 
 # Golang
 apps += golang
@@ -129,10 +129,10 @@ $(golang_package):
 	wget -c -O $@ https://go.dev/dl/$@
 
 apps += golang-install
-golang-install: pre_install $(prefix)/go/VERSION
-$(prefix)/go/VERSION: $(golang_package)
-	mkdir -p $(prefix)
-	case "$<" in *.zip) unzip -DD -d $(prefix) $<;; *.tar.*) tar -xamf $< -C $(prefix);; esac
+golang-install: pre_install $(DESTDIR)/go/VERSION
+$(DESTDIR)/go/VERSION: $(golang_package)
+	mkdir -p $(DESTDIR)
+	case "$<" in *.zip) unzip -DD -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR);; esac
 
 # Graalvm
 apps += graalvm
@@ -150,7 +150,7 @@ graalvm_arch := x86_64
 graalvm_rpm := apache-graalvm-$(graalvm_version).$(graalvm_arch).rpm
 graalvm-rpm: $(graalvm_rpm)
 $(graalvm_rpm): $(graalvm_package) $(fpm)
-	$(fpm) -s tar -t rpm -n graalvm-jdk -a $(graalvm_arch) --prefix $(prefix) $<
+	$(fpm) -s tar -t rpm -n graalvm-jdk -a $(graalvm_arch) --prefix $(DESTDIR) $<
 
 # leininage
 apps += leiningen
@@ -170,11 +170,11 @@ $(truffleruby_package):
 	wget -c -O $@ https://github.com/oracle/truffleruby/releases/download/graal-$(truffleruby_version)/$(truffleruby_package)
 
 apps += truffleruby-install
-truffleruby_dir := $(prefix)$(patsubst %.tar.gz,%,$(truffleruby_package))/
+truffleruby_dir := $(DESTDIR)$(patsubst %.tar.gz,%,$(truffleruby_package))/
 truffleruby_bin := $(truffleruby_dir)bin/truffleruby
 truffleruby_ref := https://www.graalvm.org/latest/reference-manual/ruby/RubyManagers/#using-truffleruby-without-a-ruby-manager
 $(truffleruby_bin): $(truffleruby_package)
-	tar -xzmf $(truffleruby_package) -C $(prefix)
+	tar -xzmf $(truffleruby_package) -C $(DESTDIR)
 
 truffleruby_deps := $(truffleruby_dir)src/main/c/openssl/openssl.so $(truffleruby_dir)src/main/c/psych/psych.so
 $(truffleruby_deps):
@@ -223,7 +223,7 @@ $(babashka_package):
 
 apps += babashka-install
 ifeq ($(wildcard ~/bin/.),)
-babashka_bindir := $(prefix)babashka-$(babashka_version)/bin
+babashka_bindir := $(DESTDIR)babashka-$(babashka_version)/bin
 else
 babashka_bindir := ~/bin
 endif
@@ -243,7 +243,7 @@ $(jasspa_package):
 
 apps += jasspa_2009-install
 ifeq ($(wildcard ~/bin/.),)
-jasspa_bindir := $(prefix)jasspa-$(babashka_version)/bin
+jasspa_bindir := $(DESTDIR)jasspa-$(babashka_version)/bin
 else
 jasspa_bindir := ~/bin
 endif
@@ -267,7 +267,7 @@ $(jasspa_package):
 
 apps += jasspa-install
 ifeq ($(wildcard ~/bin/.),)
-jasspa_bindir := $(prefix)jasspa-$(babashka_version)/bin
+jasspa_bindir := $(DESTDIR)jasspa-$(babashka_version)/bin
 else
 jasspa_bindir := ~/bin
 endif

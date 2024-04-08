@@ -1,0 +1,51 @@
+diff --git a/script/compile b/script/compile
+index 04c3c1f7..c79d1c31 100755
+--- a/script/compile
++++ b/script/compile
+@@ -18,8 +18,13 @@ then
+     echo "Please run script/uberjar first."
+     exit 1
+ fi
++native_image="$GRAALVM_HOME/bin/native-image"
+ 
+-if [[ ! -x "$GRAALVM_HOME/bin/native-image" ]]; then
++if [[ $MSYSTEM ]]; then
++    native_image="$GRAALVM_HOME/bin/native-image.cmd"
++fi
++
++if [[ ! -f "$native_image" ]]; then
+     "$GRAALVM_HOME/bin/gu" install native-image
+ fi
+ 
+@@ -33,6 +38,7 @@ BABASHKA_BINARY=${BABASHKA_BINARY:-"bb"}
+ 
+ args=("-jar" "$BABASHKA_JAR"
+       "-H:Name=$BABASHKA_BINARY"
++      "-H:+UnlockExperimentalVMOptions"
+       "-H:+ReportExceptionStackTraces"
+       # "-H:+PrintAnalysisCallTree"
+       # "-H:+DashboardAll"
+@@ -40,6 +46,7 @@ args=("-jar" "$BABASHKA_JAR"
+       # "-H:+DashboardPretty"
+       # "-H:+DashboardJson"
+       "-H:ReportAnalysisForbiddenType=java.awt.Toolkit:InHeap,Allocated"
++      "-H:-CheckToolchain"
+       "--verbose"
+       "--no-fallback"
+       "--native-image-info"
+@@ -48,7 +55,8 @@ args=("-jar" "$BABASHKA_JAR"
+       "$BABASHKA_XMX"
+       "--enable-preview"
+       "-march=compatibility" # necessary for compatibility with older machines, e.g. see https://github.com/borkdude/deps.clj/actions/runs/6337277754/job/17212028399
+-      "-O1")
++      "-O1"
++)
+ 
+ BABASHKA_STATIC=${BABASHKA_STATIC:-}
+ BABASHKA_MUSL=${BABASHKA_MUSL:-}
+@@ -106,4 +114,4 @@ then
+     export BABASHKA_FEATURE_PRIORITY_MAP="${BABASHKA_FEATURE_PRIORITY_MAP:-false}"
+ fi
+ 
+-"$GRAALVM_HOME/bin/native-image" "${args[@]}" "$@"
++"$native_image" "${args[@]}" "$@"

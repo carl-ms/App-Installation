@@ -297,15 +297,17 @@ $(phcl-microemacs_pkg):
 	mkdir -p $(@D)
 	rsync -Pt rsync://www.phcomp.co.uk/downloads/centos9-x86_64/phcl/$(@F) $(@D)/
 
-## Raku, Perl 6
-apps += rakudo
 
-rakudo: $(rakudo_package)
+## Raku, Perl 6.
+apps += rakudo
 rakudo_version := 2024.06-01
+ifneq ($(MSYSTEM),)
+rakudo_package := rakudo-moar-$(rakudo_version)-win-x86_64-msvc.zip
+else
 rakudo_package := rakudo-moar-$(rakudo_version)-linux-x86_64-gcc.tar.gz
+endif
 
 # https://rakudo.org/
-
 rakudo: $(rakudo_package)
 $(rakudo_package):
 	wget -c -O $@.swp https://rakudo.org/dl/rakudo/$(rakudo_package)
@@ -313,10 +315,10 @@ $(rakudo_package):
 
 apps += rakudo-install
 rakudo-install: pre_install $(rakudo_package)
-	[[ "$(rakudo_package)" == *.zip ]] && unzip $^ -d $(DESTDIR) || tar xaf $(rakudo_package) -C $(DESTDIR)
+	[[ $(rakudo_package) == *.zip ]] && unzip $(rakudo_package) -d $(DESTDIR) || tar xaf $(rakudo_package) -C $(DESTDIR)
 
 
-# Add more here.
+## Add more here.
 
 # All
 all: $(apps)

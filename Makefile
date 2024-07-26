@@ -229,7 +229,7 @@ babashka_bindir := ~/bin
 endif
 babashka-install: pre_install $(babashka_package)
 	mkdir -p $(babashka_bindir)
-	[[ $^ == *.zip ]] && unzip $^ -d $(babashka_bindir) || tar xaf $(babashka_package) -C $(babashka_bindir)
+	[[ "$(babashka_package)" == *.zip ]] && unzip $^ -d $(babashka_bindir) || tar xaf $(babashka_package) -C $(babashka_bindir)
 
 # JASSPA MicroEmacs
 apps += jasspa_2009
@@ -267,7 +267,7 @@ $(jasspa_package):
 
 apps += jasspa-install
 ifeq ($(wildcard ~/bin/.),)
-jasspa_bindir := $(DESTDIR)jasspa-$(babashka_version)/bin
+jasspa_bindir := $(DESTDIR)jasspa-$(jasspa_version)/bin
 else
 jasspa_bindir := ~/bin
 endif
@@ -296,6 +296,27 @@ phcl-microemacs: $(phcl-microemacs_pkg)
 $(phcl-microemacs_pkg):
 	mkdir -p $(@D)
 	rsync -Pt rsync://www.phcomp.co.uk/downloads/centos9-x86_64/phcl/$(@F) $(@D)/
+
+## Raku, Perl 6
+apps += rakudo
+
+rakudo: $(rakudo_package)
+rakudo_version := 2024.06-01
+rakudo_package := rakudo-moar-$(rakudo_version)-linux-x86_64-gcc.tar.gz
+
+# https://rakudo.org/
+
+rakudo: $(rakudo_package)
+$(rakudo_package):
+	wget -c -O $@.swp https://rakudo.org/dl/rakudo/$(rakudo_package)
+	mv -f $@.swp $@
+
+apps += rakudo-install
+rakudo-install: pre_install $(rakudo_package)
+	[[ "$(rakudo_package)" == *.zip ]] && unzip $^ -d $(DESTDIR) || tar xaf $(rakudo_package) -C $(DESTDIR)
+
+
+# Add more here.
 
 # All
 all: $(apps)

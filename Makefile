@@ -318,6 +318,38 @@ rakudo-install: pre_install $(rakudo_package)
 	[[ $(rakudo_package) == *.zip ]] && unzip $(rakudo_package) -d $(DESTDIR) || tar xaf $(rakudo_package) -C $(DESTDIR)
 
 
+# chruby
+apps += chruby
+chruby_version := 0.3.9
+chruby_package := chruby-$(chruby_version).tar.gz
+chruby: $(chruby_package)
+$(chruby_package):
+	wget -c -O $@.swp https://github.com/postmodern/chruby/releases/download/v$(chruby_version)/$(chruby_package)
+	mv -f $@.swp $@
+
+apps += chruby-install
+chruby-install: pre_install $(chruby_package)
+	tar -xaf $(chruby_package)
+	make -C chruby-$(chruby_version) install PREFIX=$(DESTDIR)/chruby-$(chruby_version)
+	-rm -f ~/.bashrc.d/chruby
+	echo "# This file is generated automatically, DO NOT EDIT!" > ~/.bashrc.d/chruby
+	echo "source $(DESTDIR)/chruby-$(chruby_version)/share/chruby/chruby.sh" >> ~/.bashrc.d/chruby
+	echo "source $(DESTDIR)/chruby-$(chruby_version)/share/chruby/auto.sh" >> ~/.bashrc.d/chruby
+
+
+# ruby-install, ruby installer
+apps += ruby-installer
+ruby-installer_version := 0.9.3
+ruby-installer_package := ruby-install-$(ruby-installer_version).tar.gz
+ruby-installer: $(ruby-installer_package)
+$(ruby-installer_package):
+	wget -c -O $@.swp https://github.com/postmodern/ruby-install/releases/download/v$(ruby-installer_version)/$(ruby-installer_package)
+	mv -f $@.swp $@
+
+ruby-installer-install: pre_install $(ruby-installer_package)
+	tar -xaf $(ruby-installer_package)
+	make -C ruby-install-$(ruby-installer_version) install PREFIX=$(DESTDIR)/ruby-install-$(ruby-installer_version)
+
 ## Add more here.
 
 # All

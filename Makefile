@@ -53,7 +53,7 @@ $(jruby_package):
 
 # JRuby installation
 apps += jruby-install
-jruby-install: pre_install $(DESTDIR)/jruby-$(jruby_version)/lib/jruby.jar
+jruby-install: $(DESTDIR)/jruby-$(jruby_version)/lib/jruby.jar pre_install
 $(DESTDIR)/jruby-$(jruby_version)/lib/jruby.jar: $(jruby_package)
 	tar -xamf $< -C $(DESTDIR)
 
@@ -68,7 +68,7 @@ $(jruby_complete_package):
 
 # JRuby_Complete installation
 apps += jruby_complete-install
-jruby_complete-install: pre_install ~/bin/$(jruby_complete_package)
+jruby_complete-install: ~/bin/$(jruby_complete_package) pre_install
 ~/bin/$(jruby_complete_package): $(jruby_complete_package)
 	cp -f $< $@
 
@@ -111,7 +111,7 @@ $(tinygo_package):
 
 # TinyGo-install
 apps += tinygo-install
-tinygo-install: pre_install $(DESTDIR)/tinygo/lib/musl/COPYRIGHT
+tinygo-install: $(DESTDIR)/tinygo/lib/musl/COPYRIGHT pre_install
 $(DESTDIR)/tinygo/lib/musl/COPYRIGHT: $(tinygo_package)
 	mkdir -p $(DESTDIR)
 	case "$<" in *.zip) unzip -DD -n -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR) --skip-old-files;; esac
@@ -129,7 +129,7 @@ $(golang_package):
 	wget -c -O $@ https://go.dev/dl/$@
 
 apps += golang-install
-golang-install: pre_install $(DESTDIR)/go/VERSION
+golang-install: $(DESTDIR)/go/VERSION pre_install
 $(DESTDIR)/go/VERSION: $(golang_package)
 	mkdir -p $(DESTDIR)
 	case "$<" in *.zip) unzip -DD -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR);; esac
@@ -227,9 +227,9 @@ babashka_bindir := $(DESTDIR)babashka-$(babashka_version)/bin
 else
 babashka_bindir := ~/bin
 endif
-babashka-install: pre_install $(babashka_package)
+babashka-install: $(babashka_package) pre_install
 	mkdir -p $(babashka_bindir)
-	[[ "$(babashka_package)" == *.zip ]] && unzip $^ -d $(babashka_bindir) || tar xaf $(babashka_package) -C $(babashka_bindir)
+	[[ "$(babashka_package)" == *.zip ]] && unzip $< -d $(babashka_bindir) || tar xaf $(babashka_package) -C $(babashka_bindir)
 
 # JASSPA MicroEmacs
 apps += jasspa_2009
@@ -247,7 +247,7 @@ jasspa_bindir := $(DESTDIR)jasspa-$(babashka_version)/bin
 else
 jasspa_bindir := ~/bin
 endif
-jasspa_2009-install: pre_install $(jasspa_bindir)/mec2009
+jasspa_2009-install: $(jasspa_bindir)/mec2009 pre_install
 $(jasspa_bindir)/mec2009: builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXX)
 $(jasspa_bindir)/mec2009: $(jasspa_package)
 	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=2
@@ -276,7 +276,7 @@ ifneq ($(MSYSTEM),)
 exe=.exe
 endif
 
-jasspa-install: pre_install $(jasspa_bindir)/mec$(exe)
+jasspa-install: $(jasspa_bindir)/mec$(exe) pre_install
 $(jasspa_bindir)/mec$(exe): builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXXX)
 $(jasspa_bindir)/mec$(exe): $(jasspa_package)
 	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=1
@@ -314,7 +314,7 @@ $(rakudo_package):
 	mv -f $@.swp $@
 
 apps += rakudo-install
-rakudo-install: pre_install $(rakudo_package)
+rakudo-install: $(rakudo_package) pre_install
 	[[ $(rakudo_package) == *.zip ]] && unzip $(rakudo_package) -d $(DESTDIR) || tar xaf $(rakudo_package) -C $(DESTDIR)
 
 
@@ -328,7 +328,7 @@ $(chruby_package):
 	mv -f $@.swp $@
 
 apps += chruby-install
-chruby-install: pre_install $(chruby_package)
+chruby-install: $(chruby_package) pre_install
 	tar -xaf $(chruby_package)
 	make -C chruby-$(chruby_version) install PREFIX=$(DESTDIR)/chruby-$(chruby_version)
 	-rm -f ~/.bashrc.d/chruby
@@ -346,7 +346,7 @@ $(ruby-installer_package):
 	wget -c -O $@.swp https://github.com/postmodern/ruby-install/releases/download/v$(ruby-installer_version)/$(ruby-installer_package)
 	mv -f $@.swp $@
 
-ruby-installer-install: pre_install $(ruby-installer_package)
+ruby-installer-install: $(ruby-installer_package) pre_install
 	tar -xaf $(ruby-installer_package)
 	make -C ruby-install-$(ruby-installer_version) install PREFIX=$(DESTDIR)/ruby-install-$(ruby-installer_version)
 
@@ -355,4 +355,10 @@ ruby-installer-install: pre_install $(ruby-installer_package)
 # All
 all: $(apps)
 
-.PHONY: pre_install $(apps)
+clean:
+	-rm -f .*.done
+
+distclean: clean
+	-git clean -Xf
+
+.PHONY: all clean distclean pre_install $(apps)

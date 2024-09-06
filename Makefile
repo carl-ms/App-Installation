@@ -136,12 +136,12 @@ $(DESTDIR)/go/VERSION: $(golang_package)
 
 # Graalvm https://www.oracle.com/java/technologies/downloads/#graalvmjava17-windows
 apps += graalvm
-graalvm_version := 17
-graalvm_package := graalvm-jdk-$(graalvm_version)_linux-x64_bin.tar.gz
+graalvm_version := 21
+graalvm_package := graalvm-jdk-$(graalvm_version)_windows-x64_bin.zip
 
 graalvm: $(graalvm_package)
 $(graalvm_package):
-	wget -c -O $@ https://download.oracle.com/graalvm/17/latest/$@
+	wget -c -O $@ https://download.oracle.com/graalvm/$(graalvm_version)/latest/$@
 
 
 # Graalvm-package

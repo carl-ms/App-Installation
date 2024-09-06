@@ -42,9 +42,9 @@ $(jdk_package):
 	wget -c https://download.oracle.com/java/$(jdk_version)/latest/$@
 
 
-# JRuby
+# JRuby https://repo1.maven.org/maven2/org/jruby/jruby-dist/
 apps += jruby
-jruby_version := 9.4.6.0
+jruby_version := 9.4.8.0
 jruby_package := jruby-dist-$(jruby_version)-bin.tar.gz
 jruby: $(jruby_package)
 $(jruby_package):
@@ -74,7 +74,7 @@ jruby_complete-install: pre_install ~/bin/$(jruby_complete_package)
 
 # Maven
 apps += maven
-maven_version := 3.9.5
+maven_version := 3.9.9
 maven_package := apache-maven-$(maven_version)-bin.tar.gz
 maven: $(maven_package)
 $(maven_package):
@@ -96,7 +96,7 @@ warbler: $(warbler_package)
 $(warbler_package):
 	wget -c -O $@ https://github.com/jruby/warbler/archive/refs/tags/v$(warbler_version).tar.gz
 
-# TinyGo
+# TinyGo https://github.com/tinygo-org/tinygo/releases
 apps += tinygo
 tinygo_version := 0.31.2
 ifeq ($(MSYSTEM),MSYS)
@@ -116,9 +116,9 @@ $(DESTDIR)/tinygo/lib/musl/COPYRIGHT: $(tinygo_package)
 	mkdir -p $(DESTDIR)
 	case "$<" in *.zip) unzip -DD -n -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR) --skip-old-files;; esac
 
-# Golang
+# Golang https://go.dev/dl/
 apps += golang
-golang_version := 1.22.1
+golang_version := 1.23.1
 ifeq ($(MSYSTEM),MSYS)
 golang_package := go$(golang_version).windows-amd64.zip
 else
@@ -134,7 +134,7 @@ $(DESTDIR)/go/VERSION: $(golang_package)
 	mkdir -p $(DESTDIR)
 	case "$<" in *.zip) unzip -DD -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR);; esac
 
-# Graalvm
+# Graalvm https://www.oracle.com/java/technologies/downloads/#graalvmjava17-windows
 apps += graalvm
 graalvm_version := 17
 graalvm_package := graalvm-jdk-$(graalvm_version)_linux-x64_bin.tar.gz
@@ -161,9 +161,9 @@ lein.zip:
 	zip --move --test $@ lein
 
 
-# TruffleRuby
+# TruffleRuby https://github.com/oracle/truffleruby/releases
 apps += truffleruby
-truffleruby_version := 23.1.1
+truffleruby_version := 24.0.2
 truffleruby_package := truffleruby-$(truffleruby_version)-linux-amd64.tar.gz
 truffleruby: $(truffleruby_package)
 $(truffleruby_package):
@@ -208,9 +208,9 @@ bw.zip:
 	wget -c -O $@ 'https://vault.bitwarden.com/download/?app=cli&platform=linux'
 
 
-# Babashka
+# Babashka https://github.com/babashka/babashka/releases
 apps += babashka
-babashka_version := 1.3.188
+babashka_version := 1.3.191
 ifeq ($(os), linux)
 babashka_package := babashka-$(babashka_version)-$(os)-amd64-static.tar.gz
 else ifeq ($(os), windows)
@@ -318,7 +318,7 @@ rakudo-install: pre_install $(rakudo_package)
 	[[ $(rakudo_package) == *.zip ]] && unzip $(rakudo_package) -d $(DESTDIR) || tar xaf $(rakudo_package) -C $(DESTDIR)
 
 
-# chruby
+# chruby https://github.com/postmodern/chruby/releases
 apps += chruby
 chruby_version := 0.3.9
 chruby_package := chruby-$(chruby_version).tar.gz
@@ -337,7 +337,7 @@ chruby-install: pre_install $(chruby_package)
 	echo "source $(DESTDIR)/chruby-$(chruby_version)/share/chruby/auto.sh" >> ~/.bashrc.d/chruby
 
 
-# ruby-install, ruby installer
+# ruby-install, ruby installer https://github.com/postmodern/ruby-install/releases
 apps += ruby-installer
 ruby-installer_version := 0.9.3
 ruby-installer_package := ruby-install-$(ruby-installer_version).tar.gz

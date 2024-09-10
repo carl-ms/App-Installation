@@ -56,6 +56,12 @@ openlogic_jdk8: $(openlogic_jdk8_package)
 $(openlogic_jdk8_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk8_version)/$@
 
+apps += clojure-install
+clojure-install: pre_install
+	curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
+	chmod +x linux-install.sh
+	./linux-install.sh --prefix $(DESTDIR)/clojure
+
 # JRuby https://repo1.maven.org/maven2/org/jruby/jruby-dist/
 apps += jruby
 jruby_version := 9.4.8.0

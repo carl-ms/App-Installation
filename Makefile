@@ -34,13 +34,27 @@ pre_install: .pre_install.done $(req_progs)
 	sudo dnf -y install redhat-lsb-core
 
 # JDK
-apps += jdk
-jdk_version := 17
-jdk_package := jdk-$(jdk_version)_$(os)-x64_bin.tar.gz
-jdk: $(jdk_package)
-$(jdk_package):
-	wget -c https://download.oracle.com/java/$(jdk_version)/latest/$@
+apps += jdk17
+jdk17_version := 17
+jdk17_package := jdk-$(jdk17_version)_$(os)-x64_bin.tar.gz
+jdk17: $(jdk17_package)
+$(jdk17_package):
+	wget -c https://download.oracle.com/java/$(jdk17_version)/latest/$@
 
+
+apps += jdk8
+jdk8_version := 8
+jdk8_package := jdk-$(jdk8_version)_$(os)-x64_bin.tar.gz
+jdk8: $(jdk8_package)
+$(jdk8_package):
+	wget -c https://download.oracle.com/java/$(jdk8_version)/latest/$@
+
+apps += openlogic_jdk8
+openlogic_jdk8_version := 8u422-b05
+openlogic_jdk8_package := openlogic-openjdk-$(openlogic_jdk8_version)-$(os)-x64.zip
+openlogic_jdk8: $(openlogic_jdk8_package)
+$(openlogic_jdk8_package):
+	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk8_version)/$@
 
 # JRuby https://repo1.maven.org/maven2/org/jruby/jruby-dist/
 apps += jruby

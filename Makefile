@@ -370,6 +370,17 @@ ruby-installer-install: $(ruby-installer_package) pre_install
 	tar -xaf $(ruby-installer_package)
 	make -C ruby-install-$(ruby-installer_version) install PREFIX=$(DESTDIR)/ruby-install-$(ruby-installer_version)
 
+
+# The source file create-short.c is from git-sdk library
+# https://github.com/git-for-windows/build-extra
+apps += create-shortcut
+create-shortcut: create-shortcut.exe
+create-shortcut.exe: create-shortcut.c
+	/ucrt64/bin/gcc -o $@ $^ -luuid -lole32
+
+create-shortcut.c:
+	wget https://raw.githubusercontent.com/git-for-windows/build-extra/main/git-extra/$@
+
 ## Add more here.
 
 # All

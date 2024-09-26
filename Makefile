@@ -1,7 +1,7 @@
 usage:
 	@echo "usage: make [target...]"
 	@echo "target:"
-	@for app in $(apps); do echo "  $$app"; done | LC_ALL=C sort
+	@for app in $(apps); do echo "  $$app"; done | LC_ALL=C sort --version-sort
 
 # Install destination prefix
 DESTDIR ?= ~/app
@@ -45,6 +45,12 @@ openlogic_jdk8: $(openlogic_jdk8_package)
 $(openlogic_jdk8_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk8_version)/$@
 
+apps += openlogic_jdk11
+openlogic_jdk11_version := 11.0.24+8
+openlogic_jdk11_package := openlogic-openjdk-$(openlogic_jdk11_version)-$(os)-x64.$(ext)
+openlogic_jdk11: $(openlogic_jdk11_package)
+$(openlogic_jdk11_package):
+	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk11_version)/$@
 
 apps += openlogic_jdk17
 openlogic_jdk17_version := 17.0.12+7
@@ -53,13 +59,12 @@ openlogic_jdk17: $(openlogic_jdk17_package)
 $(openlogic_jdk17_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk17_version)/$@
 
-
-apps += openlogic_jdk11
-openlogic_jdk11_version := 11.0.24+8
-openlogic_jdk11_package := openlogic-openjdk-$(openlogic_jdk11_version)-$(os)-x64.$(ext)
-openlogic_jdk11: $(openlogic_jdk11_package)
-$(openlogic_jdk11_package):
-	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk11_version)/$@
+apps += openlogic_jdk21
+openlogic_jdk21_version := 21.0.4+7
+openlogic_jdk21_package := openlogic-openjdk-$(openlogic_jdk21_version)-$(os)-x64.$(ext)
+openlogic_jdk21: $(openlogic_jdk21_package)
+$(openlogic_jdk21_package):
+	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk21_version)/$@
 
 
 # Clojure

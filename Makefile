@@ -15,10 +15,13 @@ uname_os := $(shell uname -o)
 ifeq ($(uname_os), GNU/Linux)
 os := linux
 req_progs := /usr/bin/lsb_release
+ext := tar.gz
 else ifeq ($(uname_os), Msys)
 os := windows
+ext := zip
 else
 os := $(uname_os)
+ext := tar.gz
 endif
 
 # Prepare before installation
@@ -33,34 +36,39 @@ pre_install: .pre_install.done $(req_progs)
 /usr/bin/lsb_release:
 	sudo dnf -y install redhat-lsb-core
 
+
 # JDK
-apps += jdk17
-jdk17_version := 17
-jdk17_package := jdk-$(jdk17_version)_$(os)-x64_bin.tar.gz
-jdk17: $(jdk17_package)
-$(jdk17_package):
-	wget -c https://download.oracle.com/java/$(jdk17_version)/latest/$@
-
-
-apps += jdk8
-jdk8_version := 8
-jdk8_package := jdk-$(jdk8_version)_$(os)-x64_bin.tar.gz
-jdk8: $(jdk8_package)
-$(jdk8_package):
-	wget -c https://download.oracle.com/java/$(jdk8_version)/latest/$@
-
 apps += openlogic_jdk8
 openlogic_jdk8_version := 8u422-b05
-openlogic_jdk8_package := openlogic-openjdk-$(openlogic_jdk8_version)-$(os)-x64.zip
+openlogic_jdk8_package := openlogic-openjdk-$(openlogic_jdk8_version)-$(os)-x64.$(ext)
 openlogic_jdk8: $(openlogic_jdk8_package)
 $(openlogic_jdk8_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk8_version)/$@
 
+
+apps += openlogic_jdk17
+openlogic_jdk17_version := 17.0.12+7
+openlogic_jdk17_package := openlogic-openjdk-$(openlogic_jdk17_version)-$(os)-x64.$(ext)
+openlogic_jdk17: $(openlogic_jdk17_package)
+$(openlogic_jdk17_package):
+	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk17_version)/$@
+
+
+apps += openlogic_jdk11
+openlogic_jdk11_version := 11.0.24+8
+openlogic_jdk11_package := openlogic-openjdk-$(openlogic_jdk11_version)-$(os)-x64.$(ext)
+openlogic_jdk11: $(openlogic_jdk11_package)
+$(openlogic_jdk11_package):
+	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk11_version)/$@
+
+
+# Clojure
 apps += clojure-install
 clojure-install: pre_install
 	curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
 	chmod +x linux-install.sh
 	./linux-install.sh --prefix $(DESTDIR)/clojure
+
 
 # JRuby https://repo1.maven.org/maven2/org/jruby/jruby-dist/
 apps += jruby
@@ -69,7 +77,6 @@ jruby_package := jruby-dist-$(jruby_version)-bin.tar.gz
 jruby: $(jruby_package)
 $(jruby_package):
 	wget -c https://repo1.maven.org/maven2/org/jruby/jruby-dist/$(jruby_version)/$@
-
 
 # JRuby installation
 apps += jruby-install
@@ -92,10 +99,11 @@ jruby_complete-install: ~/bin/$(jruby_complete_package) pre_install
 ~/bin/$(jruby_complete_package): $(jruby_complete_package)
 	cp -f $< $@
 
+
 # Maven
 apps += maven
 maven_version := 3.9.9
-maven_package := apache-maven-$(maven_version)-bin.tar.gz
+maven_package := apache-maven-$(maven_version)-bin.$(ext)
 maven: $(maven_package)
 $(maven_package):
 	wget -c https://dlcdn.apache.org/maven/maven-3/$(maven_version)/binaries/$@
@@ -107,14 +115,15 @@ maven_rpm: apache-maven-$(maven_version).$(maven_arch).rpm
 $(maven_rpm): $(maven_package) $(fpm)
 	$(fpm) -s tar -t rpm -n apache-maven -a $(maven_arch) --prefix $(DESTDIR) $<
 
+
 # Warbler
 apps += warbler
 warbler_version := 2.0.5
 warbler_package := warbler-$(warbler_version).tar.gz
-
 warbler: $(warbler_package)
 $(warbler_package):
 	wget -c -O $@ https://github.com/jruby/warbler/archive/refs/tags/v$(warbler_version).tar.gz
+
 
 # TinyGo https://github.com/tinygo-org/tinygo/releases
 apps += tinygo
@@ -136,6 +145,7 @@ $(DESTDIR)/tinygo/lib/musl/COPYRIGHT: $(tinygo_package)
 	mkdir -p $(DESTDIR)
 	case "$<" in *.zip) unzip -DD -n -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR) --skip-old-files;; esac
 
+
 # Golang https://go.dev/dl/
 apps += golang
 golang_version := 1.23.1
@@ -154,11 +164,11 @@ $(DESTDIR)/go/VERSION: $(golang_package)
 	mkdir -p $(DESTDIR)
 	case "$<" in *.zip) unzip -DD -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR);; esac
 
+
 # Graalvm https://www.oracle.com/java/technologies/downloads/#graalvmjava17-windows
 apps += graalvm
 graalvm_version := 21
-graalvm_package := graalvm-jdk-$(graalvm_version)_windows-x64_bin.zip
-
+graalvm_package := graalvm-jdk-$(graalvm_version)_$(os)-x64_bin.$(ext)
 graalvm: $(graalvm_package)
 $(graalvm_package):
 	wget -c -O $@ https://download.oracle.com/graalvm/$(graalvm_version)/latest/$@
@@ -172,6 +182,7 @@ graalvm-rpm: $(graalvm_rpm)
 $(graalvm_rpm): $(graalvm_package) $(fpm)
 	$(fpm) -s tar -t rpm -n graalvm-jdk -a $(graalvm_arch) --prefix $(DESTDIR) $<
 
+
 # leininage
 apps += leiningen
 leiningen: lein.zip
@@ -184,7 +195,7 @@ lein.zip:
 # TruffleRuby https://github.com/oracle/truffleruby/releases
 apps += truffleruby
 truffleruby_version := 24.0.2
-truffleruby_package := truffleruby-$(truffleruby_version)-linux-amd64.tar.gz
+truffleruby_package := truffleruby-$(truffleruby_version)-$(os)-amd64.$(ext)
 truffleruby: $(truffleruby_package)
 $(truffleruby_package):
 	wget -c -O $@ https://github.com/oracle/truffleruby/releases/download/graal-$(truffleruby_version)/$(truffleruby_package)
@@ -219,13 +230,14 @@ fpm-install: $(fpm)
 $(fpm): $(truffleruby_bin)
 	$(truffleruby_bin) -S gem install fpm
 
+
 # Bitwarden Cli
 apps += bitwarden
 bitwarden: bw
-bw: bw.zip
-	unzip $<
-bw.zip:
-	wget -c -O $@ 'https://vault.bitwarden.com/download/?app=cli&platform=linux'
+bw: bw.$(ext)
+	if [[ $(ext) = zip ]]; then unzip $<; else tar -xaf $<; fi
+bw.$(ext):
+	wget -c -O $@ 'https://vault.bitwarden.com/download/?app=cli&platform=$(ow)'
 
 
 # Babashka https://github.com/babashka/babashka/releases
@@ -249,7 +261,8 @@ babashka_bindir := ~/bin
 endif
 babashka-install: $(babashka_package) pre_install
 	mkdir -p $(babashka_bindir)
-	[[ "$(babashka_package)" == *.zip ]] && unzip $< -d $(babashka_bindir) || tar xaf $(babashka_package) -C $(babashka_bindir)
+	[[ "$(babashka_package)" == *.zip ]] && unzip $< -d $(babashka_bindir) || tar -xaf $(babashka_package) -C $(babashka_bindir)
+
 
 # JASSPA MicroEmacs
 apps += jasspa_2009
@@ -371,6 +384,7 @@ ruby-installer-install: $(ruby-installer_package) pre_install
 	make -C ruby-install-$(ruby-installer_version) install PREFIX=$(DESTDIR)/ruby-install-$(ruby-installer_version)
 
 
+ifeq ($(uname_os), Msys)
 # The source file create-short.c is from git-sdk library
 # https://github.com/git-for-windows/build-extra
 apps += create-shortcut
@@ -380,6 +394,7 @@ create-shortcut.exe: create-shortcut.c
 
 create-shortcut.c:
 	wget https://raw.githubusercontent.com/git-for-windows/build-extra/main/git-extra/$@
+endif
 
 ## Add more here.
 

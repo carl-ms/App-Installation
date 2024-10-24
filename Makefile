@@ -1,7 +1,7 @@
 usage:
 	@echo "usage: make [target...]"
 	@echo "target:"
-	@for app in $(apps); do echo "  $$app"; done | LC_ALL=C sort --version-sort
+	@printf "  %-24s%s\n" $(foreach app, $(apps), $(app) "$(value $(app)_version)") | LC_ALL=C sort --version-sort
 
 # Install destination prefix
 DESTDIR ?= ~/app

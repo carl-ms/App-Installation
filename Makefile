@@ -24,6 +24,9 @@ os := $(uname_os)
 ext := tar.gz
 endif
 
+unzip := unzip -DD -n
+untar := tar -xamf
+
 # Prepare before installation
 pre_install: .pre_install.done $(req_progs)
 
@@ -148,7 +151,7 @@ apps += tinygo-install
 tinygo-install: $(DESTDIR)/tinygo/lib/musl/COPYRIGHT pre_install
 $(DESTDIR)/tinygo/lib/musl/COPYRIGHT: $(tinygo_package)
 	mkdir -p $(DESTDIR)
-	case "$<" in *.zip) unzip -DD -n -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR) --skip-old-files;; esac
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR) --skip-old-files;; esac
 
 
 # Golang https://go.dev/dl/
@@ -167,7 +170,7 @@ apps += golang-install
 golang-install: $(DESTDIR)/go/VERSION pre_install
 $(DESTDIR)/go/VERSION: $(golang_package)
 	mkdir -p $(DESTDIR)
-	case "$<" in *.zip) unzip -DD -d $(DESTDIR) $<;; *.tar.*) tar -xamf $< -C $(DESTDIR);; esac
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
 
 
 # Graalvm https://www.oracle.com/java/technologies/downloads/#graalvmjava17-windows
@@ -210,7 +213,7 @@ truffleruby_dir := $(DESTDIR)$(patsubst %.tar.gz,%,$(truffleruby_package))/
 truffleruby_bin := $(truffleruby_dir)bin/truffleruby
 truffleruby_ref := https://www.graalvm.org/latest/reference-manual/ruby/RubyManagers/#using-truffleruby-without-a-ruby-manager
 $(truffleruby_bin): $(truffleruby_package)
-	tar -xzmf $(truffleruby_package) -C $(DESTDIR)
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
 
 truffleruby_deps := $(truffleruby_dir)src/main/c/openssl/openssl.so $(truffleruby_dir)src/main/c/psych/psych.so
 $(truffleruby_deps):
@@ -240,7 +243,8 @@ $(fpm): $(truffleruby_bin)
 apps += bitwarden
 bitwarden: bw
 bw: bw.$(ext)
-	if [[ $(ext) = zip ]]; then unzip $<; else tar -xaf $<; fi
+	case "$<" in *.zip) $(unzip) $<;; *.tar.*) $(untar) $<;; esac
+
 bw.$(ext):
 	wget -c -O $@ 'https://vault.bitwarden.com/download/?app=cli&platform=$(ow)'
 
@@ -266,8 +270,7 @@ babashka_bindir := ~/bin
 endif
 babashka-install: $(babashka_package) pre_install
 	mkdir -p $(babashka_bindir)
-	[[ "$(babashka_package)" == *.zip ]] && unzip $< -d $(babashka_bindir) || tar -xaf $(babashka_package) -C $(babashka_bindir)
-
+	case "$<" in *.zip) $(unzip) $< -d $(babashka_bindir);; *.tar.*) $(untar) $< -C $(babashka_bindir);; esac
 
 # JASSPA MicroEmacs
 apps += jasspa_2009
@@ -288,7 +291,7 @@ endif
 jasspa_2009-install: $(jasspa_bindir)/mec2009 pre_install
 $(jasspa_bindir)/mec2009: builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXX)
 $(jasspa_bindir)/mec2009: $(jasspa_package)
-	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=2
+	$(untar) $(jasspa_package) -C $(builddir) --strip-components=2
 	cd $(builddir)/src && sed -i -e 's/sys_errlist\[errno]/strerror(errno)/g' *.c
 	cd $(builddir)/src && ./build && cp -f mec $@
 	rm -rf $(builddir)
@@ -317,11 +320,11 @@ endif
 jasspa-install: $(jasspa_bindir)/mec$(exe) pre_install
 $(jasspa_bindir)/mec$(exe): builddir := $(shell mktemp -d --tmpdir jasspa-XXXXXXX)
 $(jasspa_bindir)/mec$(exe): $(jasspa_package)
-	tar -xaf $(jasspa_package) -C $(builddir) --strip-components=1
+	$(untar) $(jasspa_package) -C $(builddir) --strip-components=1
 	patch -d $(builddir) -p1 < jasspa.patch
 	cd $(builddir) && rm -f bin/me* bin/bfs*
 	cd $(builddir)/src && ./build
-	cd $(builddir) && make me-bfs-bin
+	cd $(builddir) && $(MAKE) me-bfs-bin
 	[ -f $(builddir)/bin/mec-linux.bin ] &&  install -D -m 755 $(builddir)/bin/mec-linux.bin $@ ||:
 	[ -f $(builddir)/bin/mec-windows.exe ] && install -D $(builddir)/bin/mec-windows.exe $@ ||:
 	test -f $@
@@ -353,7 +356,7 @@ $(rakudo_package):
 
 apps += rakudo-install
 rakudo-install: $(rakudo_package) pre_install
-	[[ $(rakudo_package) == *.zip ]] && unzip $(rakudo_package) -d $(DESTDIR) || tar xaf $(rakudo_package) -C $(DESTDIR)
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
 
 
 # chruby https://github.com/postmodern/chruby/releases
@@ -367,8 +370,8 @@ $(chruby_package):
 
 apps += chruby-install
 chruby-install: $(chruby_package) pre_install
-	tar -xaf $(chruby_package)
-	make -C chruby-$(chruby_version) install PREFIX=$(DESTDIR)/chruby-$(chruby_version)
+	$(untar) $(chruby_package)
+	$(MAKE) -C chruby-$(chruby_version) install PREFIX=$(DESTDIR)/chruby-$(chruby_version)
 	-rm -f ~/.bashrc.d/chruby
 	echo "# This file is generated automatically, DO NOT EDIT!" > ~/.bashrc.d/chruby
 	echo "source $(DESTDIR)/chruby-$(chruby_version)/share/chruby/chruby.sh" >> ~/.bashrc.d/chruby
@@ -385,8 +388,8 @@ $(ruby-installer_package):
 	mv -f $@.swp $@
 
 ruby-installer-install: $(ruby-installer_package) pre_install
-	tar -xaf $(ruby-installer_package)
-	make -C ruby-install-$(ruby-installer_version) install PREFIX=$(DESTDIR)/ruby-install-$(ruby-installer_version)
+	$(untar) $(ruby-installer_package)
+	$(MAKE) -C ruby-install-$(ruby-installer_version) install PREFIX=$(DESTDIR)/ruby-install-$(ruby-installer_version)
 
 
 ifeq ($(uname_os), Msys)

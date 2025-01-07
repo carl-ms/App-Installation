@@ -48,12 +48,21 @@ openlogic_jdk8: $(openlogic_jdk8_package)
 $(openlogic_jdk8_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk8_version)/$@
 
+apps += openlogic_jdk8-install
+openlogic_jdk8-install: $(openlogic_jdk8_package) pre_install
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
+
+
 apps += openlogic_jdk11
 openlogic_jdk11_version := 11.0.24+8
 openlogic_jdk11_package := openlogic-openjdk-$(openlogic_jdk11_version)-$(os)-x64.$(ext)
 openlogic_jdk11: $(openlogic_jdk11_package)
 $(openlogic_jdk11_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk11_version)/$@
+
+apps += openlogic_jdk11-install
+openlogic_jdk11-install: $(openlogic_jdk11_package) pre_install
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
 
 apps += openlogic_jdk17
 openlogic_jdk17_version := 17.0.12+7
@@ -62,12 +71,20 @@ openlogic_jdk17: $(openlogic_jdk17_package)
 $(openlogic_jdk17_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk17_version)/$@
 
+apps += openlogic_jdk17-install
+openlogic_jdk17-install: $(openlogic_jdk17_package) pre_install
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
+
 apps += openlogic_jdk21
 openlogic_jdk21_version := 21.0.4+7
 openlogic_jdk21_package := openlogic-openjdk-$(openlogic_jdk21_version)-$(os)-x64.$(ext)
 openlogic_jdk21: $(openlogic_jdk21_package)
 $(openlogic_jdk21_package):
 	wget -c https://builds.openlogic.com/downloadJDK/openlogic-openjdk/$(openlogic_jdk21_version)/$@
+
+apps += openlogic_jdk21-install
+openlogic_jdk21-install: $(openlogic_jdk21_package) pre_install
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
 
 
 # Clojure
@@ -88,9 +105,8 @@ $(jruby_package):
 
 # JRuby installation
 apps += jruby-install
-jruby-install: $(DESTDIR)/jruby-$(jruby_version)/lib/jruby.jar pre_install
-$(DESTDIR)/jruby-$(jruby_version)/lib/jruby.jar: $(jruby_package)
-	tar -xamf $< -C $(DESTDIR)
+jruby-install: $(jruby_package) pre_install
+	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
 
 # JRuby-Complete
 apps += jruby_complete
@@ -403,6 +419,19 @@ create-shortcut.exe: create-shortcut.c
 create-shortcut.c:
 	wget https://raw.githubusercontent.com/git-for-windows/build-extra/main/git-extra/$@
 endif
+
+
+apps += github_cli
+github_cli_version := 2.65.0
+github_cli_package := gh_$(github_cli_version)_windows_amd64.zip
+github_cli: $(github_cli_package)
+$(github_cli_package):
+	wget -c -O $@.swp https://github.com/cli/cli/releases/download/v$(github_cli_version)/$(github_cli_package)
+	mv -f $@.swp $@
+
+apps += github_cli-install
+github_cli-install: $(github_cli_package)
+	unzip $< bin/* -d ~
 
 ## Add more here.
 

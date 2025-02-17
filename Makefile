@@ -189,13 +189,25 @@ $(DESTDIR)/go/VERSION: $(golang_package)
 	case "$<" in *.zip) $(unzip) $< -d $(DESTDIR);; *.tar.*) $(untar) $< -C $(DESTDIR);; esac
 
 
-# Graalvm https://www.oracle.com/java/technologies/downloads/#graalvmjava17-windows
+# Graalvm https://www.oracle.com/java/technologies/downloads/#graalvmjava23-windows
 apps += graalvm
-graalvm_version := 21
+graalvm_version := 23
 graalvm_package := graalvm-jdk-$(graalvm_version)_$(os)-x64_bin.$(ext)
 graalvm: $(graalvm_package)
 $(graalvm_package):
 	wget -c -O $@ https://download.oracle.com/graalvm/$(graalvm_version)/latest/$@
+
+
+apps += graalvm-install
+graalvm-install: vswhere='/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe'
+graalvm-install: $(graalvm_package)
+	unzip $< -d ~/app/
+	if [[ -x $(vswhere) ]]; then \
+	  instdir="`$(vswhere) -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`"; \
+	  if [[ $$instdir ]]; then \
+	    (echo -e '2\ni'; echo -E "call \"$$instdir\VC\Auxiliary\Build\vcvars64.bat\""; echo -e '.\nw!\nq') | ex  ~/app/graalvm-jdk-*/bin/native-image.cmd; \
+	  fi; \
+	fi
 
 
 # Graalvm-package
